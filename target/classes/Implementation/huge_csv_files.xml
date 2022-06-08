@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:java="http://www.mulesoft.org/schema/mule/java" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd">
+	<flow name="huge_csv_filesFlow" doc:id="a0948af2-7db0-472b-a80a-4363691e3c5d" >
+		<http:listener doc:name="Listener" doc:id="5c7458cf-a57b-4aa9-a178-c7f3cbff7ef2" config-ref="HTTP_Listener_config" path="${http.path}"/>
+		<java:invoke-static doc:name="Invoke static" doc:id="5934b47f-ef96-43f4-b10c-77433cd033ed" class="csv.com.SplitCSVFile" method="split()"/>
+		<logger level="INFO" doc:name="Logger" doc:id="fed14b7f-cf4b-4b14-983d-bea0fdf24b13" message="#[payload]"/>
+		<flow-ref doc:name="Flow Reference" doc:id="d392a756-288f-42e2-9362-089fff0537ee" name="handling_splitted_filesFlow"/>
+		<error-handler ref="globalhandlerError_Handler" />
+	</flow>
+</mule>

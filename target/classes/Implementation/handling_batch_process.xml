@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="handling_batch_processFlow1" doc:id="4194a7e0-febe-4c23-bf5f-4577aedb722c" >
+		<batch:job jobName="handling_batch_processBatch_Job1" doc:id="4dc17043-2c61-422a-8e94-37e8f49512c7" blockSize="1000">
+			<batch:process-records >
+				<batch:step name="Batch_Step1" doc:id="bcf41dd2-41b2-42f6-8617-dc7472c62f7f" >
+					<logger level="INFO" doc:name="Logger" doc:id="d35f7657-627d-4016-989f-177cc0b31b73" message="#[output application/json --- payload]" />
+					<ee:transform doc:name="Transform Message" doc:id="8e82e44d-2200-4395-906a-410a8067363f">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<logger level="INFO" doc:name="Logger" doc:id="6bd5bcf5-7740-470f-a30c-164e6b77b70f" message="#[payload]" />
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="e72912ce-39df-4eeb-9812-de37a88ed461" size="200" preserveMimeTypes="true">
+						<ee:transform doc:name="Transform Message" doc:id="1f3f95fe-a847-489f-9e91-76e0c87c6dbd">
+							<ee:message>
+								<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map (read($, "application/json"))]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+						<ee:transform doc:name="Transform Message" doc:id="f6ce6ec5-6f42-4e06-895a-415c1b8e5fbd">
+							<ee:message>
+							</ee:message>
+							<ee:variables>
+								<ee:set-variable variableName="europe"><![CDATA[%dw 2.0
+output application/json
+---
+payload filter ($.Region ~="Europe" )]]></ee:set-variable>
+								<ee:set-variable variableName="Non_europe"><![CDATA[%dw 2.0
+output application/json
+---
+payload filter !($.Region ~="Europe" )]]></ee:set-variable>
+							</ee:variables>
+						</ee:transform>
+						<scatter-gather doc:name="Scatter-Gather" doc:id="bf8c1160-7367-4907-a640-fc392042fd1c">
+							<route>
+				<logger level="INFO" doc:name="Logger" doc:id="c163402f-fe82-46b2-8a1c-96a92484184b" message="******NON_EUROPE***" />
+								<ee:transform doc:name="Transform Message" doc:id="975221f2-6a45-48e0-bf42-f1e07ac24e20">
+									<ee:message>
+										<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+vars.Non_europe map ( payload01 , indexOfPayload01 ) -> {
+	Order_ID: payload01."Order ID",
+	Sales_Channel: payload01."Sales Channel",
+	Item_Type: payload01."Item Type",
+	Ship_Date: payload01."Ship Date",
+	Total_Profit: payload01."Total Profit",
+	Order_Date: payload01."Order Date",
+	Total_Revenue: payload01."Total Revenue",
+	Order_Priority: payload01."Order Priority",
+	Units_Sold: payload01."Units Sold",
+	Total_Cost: payload01."Total Cost",
+	Region: payload01.Region,
+	Country: payload01.Country,
+	Unit_Price: payload01."Unit Price"
+}]]></ee:set-payload>
+									</ee:message>
+								</ee:transform>
+								<db:bulk-insert doc:name="Bulk insert" doc:id="59b73d19-ff1c-4513-86b1-13742165b702" config-ref="Database_Config">
+									<db:sql><![CDATA[insert into infometry.sales_records_none(Region, Country, Item_Type, Sales_Channel, Order_Priority, Order_Date, Order_ID, Ship_Date, Units_Sold, Unit_Price, Total_Revenue, Total_Cost, Total_Profit) values(:Region, :Country, :Item_Type, :Sales_Channel, :Order_Priority, :Order_Date, :Order_ID, :Ship_Date, :Units_Sold, :Unit_Price, :Total_Revenue, :Total_Cost, :Total_Profit) ]]></db:sql>
+								</db:bulk-insert>
+							</route>
+			<route>
+				<logger level="INFO" doc:name="Logger" doc:id="3bfa756b-14c9-431e-86ae-b5810656286b" message="******EUROPE***" />
+				<ee:transform doc:name="Transform Message" doc:id="677b00ea-3d7d-4efa-bad4-9cde0fd54343">
+									<ee:message>
+										<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+vars.europe map ( payload01 , indexOfPayload01 ) -> {
+	Order_ID: payload01."Order ID",
+	Sales_Channel: payload01."Sales Channel",
+	Item_Type: payload01."Item Type",
+	Ship_Date: payload01."Ship Date",
+	Total_Profit: payload01."Total Profit",
+	Order_Date: payload01."Order Date",
+	Total_Revenue: payload01."Total Revenue",
+	Order_Priority: payload01."Order Priority",
+	Units_Sold: payload01."Units Sold",
+	Total_Cost: payload01."Total Cost",
+	Region: payload01.Region,
+	Country: payload01.Country,
+	Unit_Price: payload01."Unit Price"
+}]]></ee:set-payload>
+									</ee:message>
+								</ee:transform>
+				<db:bulk-insert doc:name="Bulk insert" doc:id="e8774384-87f1-4759-83ca-546fd7f44227" config-ref="Database_Config">
+									<db:sql><![CDATA[insert into infometry.sales_records(Region, Country, Item_Type, Sales_Channel, Order_Priority, Order_Date, Order_ID, Ship_Date, Units_Sold, Unit_Price, Total_Revenue, Total_Cost, Total_Profit) values(:Region, :Country, :Item_Type, :Sales_Channel, :Order_Priority, :Order_Date, :Order_ID, :Ship_Date, :Units_Sold, :Unit_Price, :Total_Revenue, :Total_Cost, :Total_Profit) ]]></db:sql>
+								</db:bulk-insert>
+			</route>
+						</scatter-gather>
+					</batch:aggregator>
+				</batch:step>
+			</batch:process-records>
+		</batch:job>
+	</flow>
+</mule>

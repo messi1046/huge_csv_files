@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<error-handler name="globalhandlerError_Handler" doc:id="3529eea7-8679-4833-8857-c3a6d6069508" >
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="12e67437-60cd-470f-9a4c-45f867ec31a0" type="DB:BAD_SQL_SYNTAX">
+			<set-payload value='"message" : "Bad Sql "' doc:name="Set Payload" doc:id="c163ad2b-640d-4129-a2fb-15a6b930b104" />
+		</on-error-continue>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="2b1f2187-a9e1-4f02-99af-64afac161064" type="DB:CONNECTIVITY">
+			<set-payload value="BAD Connectivity" doc:name="Set Payload" doc:id="5902c963-15ac-4628-a569-b3154d5cfec1" />
+		</on-error-propagate>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="8ed5847f-e30c-4d17-bb24-b5e85782308b" type="DB:QUERY_EXECUTION">
+			<set-payload value="Insertion query Execution Failed" doc:name="Set Payload" doc:id="a5a04dc2-238c-4abd-bad1-a3ae345ab111" />
+		</on-error-continue>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="9eafd4d9-e8bb-4cc6-bd5d-d19f2a48be0a" type="ANY">
+			<set-payload value="Different sort of error" doc:name="Set Payload" doc:id="a2fd7173-f92a-40a6-9b87-a8305b514c24" />
+		</on-error-propagate>
+	</error-handler>
+</mule>
