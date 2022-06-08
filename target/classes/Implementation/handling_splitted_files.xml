@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="HTTP_Listener_config1" doc:name="HTTP Listener config" doc:id="563c2dbc-9acf-40fc-9c4e-b3a7301be21d" >
+		<http:listener-connection host="0.0.0.0" port="8083" />
+	</http:listener-config>
+	<flow name="handling_splitted_filesFlow" doc:id="dc8e3aa4-7dd4-42a4-a1b5-18e0130596a8" >
+		<file:list doc:name="List" doc:id="00c7c1d3-d671-4b37-b7c1-5b678f0e102c" config-ref="File_Config" directoryPath="C:\outputCSV_file"/>
+		<ee:transform doc:name="collection_of_files" doc:id="cb99b64b-6852-4b9d-88f3-bc880fa00e29" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload.typedAttributes map $.path]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="e0292213-c1f8-43b2-8728-1c96f594b6bd" message="#[payload]"/>
+		<foreach doc:name="For Each" doc:id="50f2d28a-c44a-44b2-9459-86f8f48ec181" >
+			<file:read doc:name="Read" doc:id="534d2230-68fa-44f3-a2e7-14424290aecc" config-ref="File_Config" outputMimeType="application/csv" path="#[payload]"/>
+			<ee:transform doc:name="Transform Message" doc:id="6a5e23ac-4b72-4771-83c9-1fd0132303c7" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<flow-ref doc:name="Flow Reference" doc:id="6171ff5b-e35f-4925-a7d4-3c46bb2c5ef7" name="handling_batch_processFlow1" />
+			<logger level="INFO" doc:name="for_each_logger" doc:id="74cc49c6-f3ae-4684-b72f-9c175d9b03af" message="#['prosessed' ++ vars.counter ++ 'file']" />
+		</foreach>
+	</flow>
+</mule>
